@@ -1,0 +1,42 @@
+--query that selects the customer_name and customer_age columns from the customers table
+EVALUATE
+SELECTCOLUMNS(
+    customers, --table_name
+    "customer_name", customers[customer_name], --"col_name", table_name[col_name],
+    "customer_age", customers[customer_age]
+)
+
+--ADDCOLUMNS:
+EVALUATE
+ADDCOLUMNS( -- ADDCOLUMNS will print all original columns and also the column be create
+  sales, 
+  "discounted_quantity", sales[sale_quantity] * (1 - sales[sale_discount])
+)
+
+--RELATED: To join other tables, similar to join in SQL
+EVALUATE
+SELECTCOLUMNS(
+    sales,
+    "discounted_price", sales[discounted_price],
+    "customer_id", RELATED('customers'[customer_id]) --Use RELATED to join other table
+)
+
+--ORDER BY:
+EVALUATE
+SELECTCOLUMNS(
+    sales,
+    "total_units_sold", sales[total_units_sold],
+    "customer_age", RELATED('customers'[customer_age])
+)
+ORDER BY --Arrage the table in a specific order based on a column
+    [total_units_sold] DESC
+	
+--We want to calculate the "time since Eshopp upgrade" for all sales. Eshopp's website went through a big migration, and management wants all sales tagged with the number of days before or after the change.
+EVALUATE
+ADDCOLUMNS(
+	sales,
+	"sales_price", sales[sale_quantity] * RELATED(products[product_list_price]),
+	"days_before_migration", DATEDIFF(Date(2025, 02, 14), RELATED(dates[date]), DAY) * -1
+)
+ORDER BY
+[days_before_migration] DESC
